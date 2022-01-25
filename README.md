@@ -19,6 +19,9 @@ composer require rasteiner/conditionalblocks
 ```
 
 ## Blueprint Example
+
+```yml 
+
 fields:
   layout:
     type: layout
@@ -41,6 +44,7 @@ fields:
       - image
       - video
       - code
+```
 
 ## License
 
