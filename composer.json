@@ -1,0 +1,18 @@
+{
+  "name": "rasteiner/conditionalblocks",
+  "description": "Disables blocks in layout fields when the column width does not match the block requirements",
+  "type": "kirby-plugin",
+  "license": "MIT",
+  "homepage": "https://getkirby.com/plugins/your-id/plugin-name",
+  "version": "0.0.0",
+  "authors": [
+    {
+      "name": "Roman Steiner",
+      "email": "roman@toastlab.ch",
+      "homepage": "https://getkirby.com/plugins/rasteiner"
+    }
+  ],
+  "require": {
+    "getkirby/composer-installer": "^1.2"
+  }
+}
