@@ -1,3 +1,11 @@
+function fitsConstraint(constraints, type, width) {
+  const constraint = constraints[type];
+  if(constraint) {
+    return width >= (constraint.min ?? 0) && width <= (constraint.max ?? Infinity)
+  }
+  return true;
+}
+
 panel.plugin("rasteiner/conditionalblocks", {
   use: [
     function (Vue) {
@@ -33,28 +41,30 @@ panel.plugin("rasteiner/conditionalblocks", {
         };
       };
 
-      const draggableOptions = Blocks.computed.draggableOptions;
-      delete Blocks.computed.draggableOptions;
-
       Vue.component("k-blocks", {
         extends: Blocks,
         inject: ["constraints", "cwidth"],
+        methods: {
+          append(what, index) {
+            if(this.constraints && this.cwidth && Array.isArray(what)) {
+              what = what.filter((block) => fitsConstraint(this.constraints, block.type, this.cwidth));
+            }
+
+            Blocks.methods.append.call(this, what, index);
+          }
+        },
         computed: {
           draggableOptions() {
-            const original = draggableOptions.call(this);
+            const original = Blocks.computed.draggableOptions.call(this);
 
             if (this.constraints && this.cwidth) {
               //remove fieldsets that are not allowed by constraints
               original.data.fieldsets = Object.fromEntries(
-                Object.entries(original.data.fieldsets).filter(([type]) => {
-                  const constraint = this.constraints[type];
-                  return !(
-                    (constraint?.min && this.cwidth < constraint.min) ||
-                    (constraint?.max && this.cwidth > constraint.max)
-                  );
-                })
+                Object.entries(original.data.fieldsets).filter(([type]) => fitsConstraint(this.constraints, type, this.cwidth))
               );
+              console.log(original.data.fieldsets);
             }
+
 
             return original;
           },
