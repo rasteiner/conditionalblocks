@@ -62,9 +62,7 @@ panel.plugin("rasteiner/conditionalblocks", {
               original.data.fieldsets = Object.fromEntries(
                 Object.entries(original.data.fieldsets).filter(([type]) => fitsConstraint(this.constraints, type, this.cwidth))
               );
-              console.log(original.data.fieldsets);
             }
-
 
             return original;
           },
