@@ -21,12 +21,12 @@ panel.plugin("rasteiner/conditionalblocks", {
 
         provide() {
           return {
-            constraints: this.requires,
+            constraints: (this.requires && !Array.isArray(this.requires)) ? this.requires : {},
           };
         },
         props: {
           requires: {
-            type: Object,
+            type: Object|Array,
             required: false,
           },
         },
