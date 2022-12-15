@@ -3,7 +3,7 @@
   "description": "Disables blocks in layout fields when the column width does not match the block requirements",
   "type": "kirby-plugin",
   "license": "MIT",
-  "homepage": "https://getkirby.com/plugins/your-id/plugin-name",
+  "homepage": "https://github.com/rasteiner/conditionalblocks",
   "version": "0.0.3",
   "authors": [
     {
