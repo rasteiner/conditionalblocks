@@ -41,9 +41,20 @@ panel.plugin("rasteiner/conditionalblocks", {
         };
       };
 
+      const inject = {
+        constraints: {
+          from: "constraints",
+          default: {},
+        },
+        cwidth: {
+          from: "cwidth",
+          default: 1,
+        },
+      }
+
       Vue.component("k-blocks", {
         extends: Blocks,
-        inject: ["constraints", "cwidth"],
+        inject: inject,
         methods: {
           append(what, index) {
             if(this.constraints && this.cwidth && Array.isArray(what)) {
@@ -69,7 +80,7 @@ panel.plugin("rasteiner/conditionalblocks", {
         },
       });
 
-      BlockSelector.inject = ["constraints", "cwidth"];
+      BlockSelector.inject = inject;
 
       const open = BlockSelector.methods.open;
       BlockSelector.methods.open = function () {

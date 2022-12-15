@@ -4,7 +4,7 @@
   "type": "kirby-plugin",
   "license": "MIT",
   "homepage": "https://getkirby.com/plugins/your-id/plugin-name",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "authors": [
     {
       "name": "Roman Steiner",
