@@ -13,14 +13,21 @@ class LayoutField extends OriginalLayoutField {
         parent::__construct($params);
     }
 
+    public function expandGroup($name) {
+        $group = $this->fieldsetGroups()[$name] ?? null;
+        if($group) {
+            return $group['sets'];
+        } else {
+            return [$name];
+        }
+    }
+
     public function getRequires(): array {
-        $min = $this->requires['min'] ?? [];
-        $max = $this->requires['max'] ?? [];
 
         $constraints = [];
 
         foreach (['min', 'max'] as $varname) {
-            $constraint = $$varname;
+            $constraint = $this->requires[$varname] ?? [];
 
             if(!is_array($constraint)) {
                 $$varname = [];
@@ -46,7 +53,9 @@ class LayoutField extends OriginalLayoutField {
                         continue;
                     }
 
-                    $constraints[$field][$varname] = $columnWidth;
+                    foreach ($this->expandGroup($field) as $field) {
+                        $constraints[$field][$varname] = $columnWidth;
+                    }
                 }
             }
         }
