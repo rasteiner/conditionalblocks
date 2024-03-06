@@ -6,100 +6,85 @@ function fitsConstraint(constraints, type, width) {
   return true;
 }
 
+const cache = new WeakMap();
+
+function createProxyForBlocks(blocks) {
+	if(cache.has(blocks)) {
+		return cache.get(blocks);
+	}
+
+	const {constraints, cwidth} = blocks;
+
+	return cache.set(blocks, new Proxy(blocks, {
+		get(target, key) {
+			if(key === 'fieldsets') {
+				return Object.fromEntries(
+					Object.entries(target.fieldsets).filter(([type]) => fitsConstraint(constraints, type, cwidth))
+				);
+			}
+			return target[key];
+		}
+	})).get(blocks);
+}
+
 panel.plugin("rasteiner/conditionalblocks", {
+
   use: [
     function (Vue) {
       const LayoutField = Vue.component("k-layout-field").options;
-      const BlockLayouts = LayoutField.components["k-block-layouts"];
-      const Layout = BlockLayouts.components["k-layout"];
-      const LayoutColumn = Layout.components["k-layout-column"];
+      const LayoutColumn = Vue.component("k-layout-column").options;
       const BlockSelector = Vue.component("k-block-selector").options;
       const Blocks = Vue.component("k-blocks").options;
 
-      Vue.component("k-layout-field", {
-        extends: LayoutField,
+      LayoutField.provide = function() {
+				return {
+					constraints: (this.requires && !Array.isArray(this.requires)) ? this.requires : {},
+				};
+			};
 
-        provide() {
-          return {
-            constraints: (this.requires && !Array.isArray(this.requires)) ? this.requires : {},
-          };
-        },
-        props: {
-          requires: {
-            type: Object|Array,
-            required: false,
-          },
-        },
-      });
+			LayoutField.props.requires = {
+				type: Object|Array,
+				required: false,
+			};
 
-      LayoutColumn.provide = function () {
-        const [num, denum] = this.width.split("/");
-        const cwidth = parseInt(num) / parseInt(denum);
+			LayoutColumn.provide = function() {
+				const [num, denum] = this.width.split("/");
+				const cwidth = parseInt(num) / parseInt(denum);
 
-        return {
-          cwidth,
-        };
-      };
+				return {
+					cwidth,
+				};
+			};
 
-      const inject = {
-        constraints: {
-          from: "constraints",
-          default: {},
-        },
-        cwidth: {
-          from: "cwidth",
-          default: 1,
-        },
-      }
+			Blocks.inject = {
+				constraints: {
+					from: "constraints",
+					default: {},
+				},
+				cwidth: {
+					from: "cwidth",
+					default: null,
+				},
+			};
 
-      Vue.component("k-blocks", {
-        extends: Blocks,
-        inject: inject,
-        methods: {
-          append(what, index) {
-            if(this.constraints && this.cwidth && Array.isArray(what)) {
-              what = what.filter((block) => fitsConstraint(this.constraints, block.type, this.cwidth));
-            }
+			for(const fn of ['choose', 'chooseToConvert']) {
+				const orig = Blocks.methods[fn];
+				Blocks.methods[fn] = function(...args) {
+					// If I'm in a column with constraints
+					if(Object.entries(this.constraints).length > 0 && this.cwidth) {
+						// create a proxy for `this` that returns a filtered set of fieldsets
+						const proxy = createProxyForBlocks(this);
 
-            Blocks.methods.append.call(this, what, index);
-          }
-        },
-        computed: {
-          draggableOptions() {
-            const original = Blocks.computed.draggableOptions.call(this);
+						// and call the original method on the proxy
+						Reflect.apply(orig, proxy, args);
+					} else {
 
-            if (this.constraints && this.cwidth) {
-              //remove fieldsets that are not allowed by constraints
-              original.data.fieldsets = Object.fromEntries(
-                Object.entries(original.data.fieldsets).filter(([type]) => fitsConstraint(this.constraints, type, this.cwidth))
-              );
-            }
+						// otherwise call the method on the original object
+						Reflect.apply(orig, this, args);
+					}
+				};
+			}
 
-            return original;
-          },
-        },
-      });
-
-      BlockSelector.inject = inject;
-
-      const open = BlockSelector.methods.open;
-      BlockSelector.methods.open = function () {
-        open.call(this, ...arguments);
-
-        if (!this.constraints || !this.cwidth) return;
-        const width = this.cwidth;
-
-        const myDisabled = Object.entries(this.constraints)
-          .filter(([_, value]) => {
-            return (
-              (value.min && width < value.min) ||
-              (value.max && width > value.max)
-            );
-          })
-          .map(([key, _]) => key);
-
-        this.disabled = [...this.disabled, ...myDisabled];
-      };
     },
   ],
 });
