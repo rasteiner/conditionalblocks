@@ -33,7 +33,6 @@ panel.plugin("rasteiner/conditionalblocks", {
     function (Vue) {
       const LayoutField = Vue.component("k-layout-field").options;
       const LayoutColumn = Vue.component("k-layout-column").options;
-      const BlockSelector = Vue.component("k-block-selector").options;
       const Blocks = Vue.component("k-blocks").options;
 
       LayoutField.provide = function() {
@@ -85,6 +84,24 @@ panel.plugin("rasteiner/conditionalblocks", {
 				};
 			}
 
+			Blocks.methods.canAcceptBlockType = function(type) {
+				if(!type in this.fieldsets) return false;
+				if(!type in this.constraints) return true;
+
+				return fitsConstraint(this.constraints, type, this.cwidth);
+			}
+
+			const move = Blocks.methods.move;
+			Blocks.methods.move = function(event) {
+				if(Reflect.apply(move, this, arguments)) {
+					let target = event.relatedContext.component;
+					while(target && !target.canAcceptBlockType) target = target.$parent;
+					const block = event.draggedContext.element;
+					return target?.canAcceptBlockType(block.type) ?? false;
+				}
+
+				return false;
+			};
     },
   ],
 });
